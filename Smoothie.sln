@@ -1,0 +1,67 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30104.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Smoothie", "Smoothie\Smoothie.vcxproj", "{2D36D549-8D97-4DB1-B7AB-68B6F0AA353B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9818C036-BC69-379C-AF2B-F778681EEECF} = {9818C036-BC69-379C-AF2B-F778681EEECF}
+		{79B87C76-DD3D-3581-8ADC-5DF4707A4890} = {79B87C76-DD3D-3581-8ADC-5DF4707A4890}
+		{75FDBEDC-BD75-3A86-8946-DA5650DC4A1B} = {75FDBEDC-BD75-3A86-8946-DA5650DC4A1B}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sdk", "..\vstbuild\public.sdk\sdk.vcxproj", "{79B87C76-DD3D-3581-8ADC-5DF4707A4890}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pluginterfaces", "..\vstbuild\pluginterfaces\pluginterfaces.vcxproj", "{75FDBEDC-BD75-3A86-8946-DA5650DC4A1B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "vst3sdk", "..\vst3sdk", "{A587EE4E-41E1-4FFA-963E-8E53DFA75605}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base", "..\vstbuild\base\base.vcxproj", "{9818C036-BC69-379C-AF2B-F778681EEECF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2D36D549-8D97-4DB1-B7AB-68B6F0AA353B}.Debug|x64.ActiveCfg = Debug|x64
+		{2D36D549-8D97-4DB1-B7AB-68B6F0AA353B}.Debug|x64.Build.0 = Debug|x64
+		{2D36D549-8D97-4DB1-B7AB-68B6F0AA353B}.Debug|x86.ActiveCfg = Debug|Win32
+		{2D36D549-8D97-4DB1-B7AB-68B6F0AA353B}.Debug|x86.Build.0 = Debug|Win32
+		{2D36D549-8D97-4DB1-B7AB-68B6F0AA353B}.Release|x64.ActiveCfg = Release|x64
+		{2D36D549-8D97-4DB1-B7AB-68B6F0AA353B}.Release|x64.Build.0 = Release|x64
+		{2D36D549-8D97-4DB1-B7AB-68B6F0AA353B}.Release|x86.ActiveCfg = Release|Win32
+		{2D36D549-8D97-4DB1-B7AB-68B6F0AA353B}.Release|x86.Build.0 = Release|Win32
+		{79B87C76-DD3D-3581-8ADC-5DF4707A4890}.Debug|x64.ActiveCfg = Debug|x64
+		{79B87C76-DD3D-3581-8ADC-5DF4707A4890}.Debug|x64.Build.0 = Debug|x64
+		{79B87C76-DD3D-3581-8ADC-5DF4707A4890}.Debug|x86.ActiveCfg = Debug|x64
+		{79B87C76-DD3D-3581-8ADC-5DF4707A4890}.Release|x64.ActiveCfg = Release|x64
+		{79B87C76-DD3D-3581-8ADC-5DF4707A4890}.Release|x64.Build.0 = Release|x64
+		{79B87C76-DD3D-3581-8ADC-5DF4707A4890}.Release|x86.ActiveCfg = Release|x64
+		{75FDBEDC-BD75-3A86-8946-DA5650DC4A1B}.Debug|x64.ActiveCfg = Debug|x64
+		{75FDBEDC-BD75-3A86-8946-DA5650DC4A1B}.Debug|x64.Build.0 = Debug|x64
+		{75FDBEDC-BD75-3A86-8946-DA5650DC4A1B}.Debug|x86.ActiveCfg = Debug|x64
+		{75FDBEDC-BD75-3A86-8946-DA5650DC4A1B}.Release|x64.ActiveCfg = Release|x64
+		{75FDBEDC-BD75-3A86-8946-DA5650DC4A1B}.Release|x64.Build.0 = Release|x64
+		{75FDBEDC-BD75-3A86-8946-DA5650DC4A1B}.Release|x86.ActiveCfg = Release|x64
+		{9818C036-BC69-379C-AF2B-F778681EEECF}.Debug|x64.ActiveCfg = Debug|x64
+		{9818C036-BC69-379C-AF2B-F778681EEECF}.Debug|x64.Build.0 = Debug|x64
+		{9818C036-BC69-379C-AF2B-F778681EEECF}.Debug|x86.ActiveCfg = Debug|x64
+		{9818C036-BC69-379C-AF2B-F778681EEECF}.Release|x64.ActiveCfg = Release|x64
+		{9818C036-BC69-379C-AF2B-F778681EEECF}.Release|x64.Build.0 = Release|x64
+		{9818C036-BC69-379C-AF2B-F778681EEECF}.Release|x86.ActiveCfg = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{79B87C76-DD3D-3581-8ADC-5DF4707A4890} = {A587EE4E-41E1-4FFA-963E-8E53DFA75605}
+		{75FDBEDC-BD75-3A86-8946-DA5650DC4A1B} = {A587EE4E-41E1-4FFA-963E-8E53DFA75605}
+		{9818C036-BC69-379C-AF2B-F778681EEECF} = {A587EE4E-41E1-4FFA-963E-8E53DFA75605}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {51036AE1-C597-4F65-A3B6-CA31ECD3BD75}
+	EndGlobalSection
+EndGlobal

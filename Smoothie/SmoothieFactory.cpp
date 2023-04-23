@@ -21,7 +21,7 @@ bool DeinitModule()
 }
 
 BEGIN_FACTORY_DEF("Kevin Hamlen",
-	"no website",
+	"https://github.com/hamlen/SmoothieVST",
 	"no contact")
 
 	LOG("GetPluginFactory called.\n");

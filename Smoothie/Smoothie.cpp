@@ -348,7 +348,7 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 	{
 		double slowness = values[sid].slowness;
 		double max_slope =
-			(slowness <= 0.) ? 1. : (secs_per_half_slowness * (1. - slowness) / slowness / data.processContext->sampleRate);
+			(slowness <= 0.) ? 1. : ((1. - slowness) / slowness / secs_per_half_slowness / data.processContext->sampleRate);
 		int32 lastSampleOffset = -1;
 		int32 numPoints = in_queue[sid] ? in_queue[sid]->getPointCount() : 0;
 

@@ -6,7 +6,7 @@
 #define PluginCategory "Fx"
 #define PluginName "Smoothie"
 
-#define PLUGINVERSION "1.0.0"
+#define PLUGINVERSION "1.1.0"
 
 bool InitModule()
 {

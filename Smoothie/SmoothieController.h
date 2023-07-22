@@ -8,7 +8,24 @@ using namespace Steinberg::Vst;
 // Plugin controller GUID - must be unique
 static const FUID SmoothieControllerUID(0xbe1df3c4, 0x903a464c, 0xbc64cea7, 0xa2059f50);
 
-class SmoothieController : public EditController
+class SmoothnessParam : public RangeParameter
+{
+public:
+	SmoothnessParam(void);
+	SmoothnessParam(const TChar* title, ParamID tag, UnitID unit_id);
+
+	void setMin(ParamValue value) {};
+	void setMax(ParamValue value) {};
+
+	ParamValue toPlain(ParamValue normValue) const SMTG_OVERRIDE;
+	ParamValue toNormalized(ParamValue plainValue) const SMTG_OVERRIDE;
+	void toString(ParamValue normValue, String128 string) const SMTG_OVERRIDE;
+	bool fromString(const TChar* string, ParamValue& normValue) const SMTG_OVERRIDE;
+
+	~SmoothnessParam(void);
+};
+
+class SmoothieController : public EditControllerEx1, public IMidiMapping
 {
 public:
 	SmoothieController(void);
@@ -18,23 +35,13 @@ public:
 		return (IEditController*) new SmoothieController;
 	}
 
-	DELEGATE_REFCOUNT(EditController)
+	DELEGATE_REFCOUNT(EditControllerEx1)
 	tresult PLUGIN_API queryInterface(const char* iid, void** obj) SMTG_OVERRIDE;
 
 	tresult PLUGIN_API initialize(FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate() SMTG_OVERRIDE;
-
 	tresult PLUGIN_API setComponentState(IBStream* state) SMTG_OVERRIDE;
-
-	// Uncomment to add a GUI
-	// IPlugView * PLUGIN_API createView (const char * name);
-
-	// Uncomment to override default EditController behavior
-	// tresult PLUGIN_API setState(IBStream* state);
-	// tresult PLUGIN_API getState(IBStream* state);
-	// tresult PLUGIN_API setParamNormalized(ParamID tag, ParamValue value);
-	// tresult PLUGIN_API getParamStringByValue(ParamID tag, ParamValue valueNormalized, String128 string);
-	// tresult PLUGIN_API getParamValueByString(ParamID tag, TChar* string, ParamValue& valueNormalized);
+	tresult PLUGIN_API getMidiControllerAssignment(int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id) SMTG_OVERRIDE;
 
 	~SmoothieController(void);
 };

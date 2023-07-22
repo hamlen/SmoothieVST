@@ -7,6 +7,7 @@
 #include "pluginterfaces/vst/ivstevents.h"
 #include "base/source/fstring.h"
 #include "pluginterfaces/base/funknown.h"
+#include <pluginterfaces/vst/ivstparameterchanges.h>
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;
@@ -57,13 +58,13 @@ public:
 	tresult PLUGIN_API setIoMode(IoMode mode);
 	tresult PLUGIN_API setState(IBStream* state);
 	tresult PLUGIN_API getState(IBStream* state);
-	tresult PLUGIN_API setBusArrangements(SpeakerArrangement* inputs, int32 numIns, SpeakerArrangement* outputs, int32 numOuts);
 	tresult PLUGIN_API canProcessSampleSize(int32 symbolicSampleSize);
 	~Smoothie(void);
 
 protected:
 	ParamSet values[num_smoothed_params];
-	void sendEvents(IEventList* send, int32 firstSampleOffset, int32 finalSampleOffset, int8 CCnum, int8 firstCCval, int8 finalCCval);
+	bool initial_points_sent = false;
+	void addOutPoint(ProcessData& data, IParamValueQueue*& pqueue, int32 param_set, int32 firstSampleOffset, int32 finalSampleOffset, int8& prevCCval, double finalval);
 };
 
 #ifdef LOGGING

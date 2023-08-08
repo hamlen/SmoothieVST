@@ -19,3 +19,4 @@ By default, *Smoothie* exports 8 triads of the above parameters, allowing you to
 
 * v1.0: initial release
 * v1.1: display slowness parameter in time units (seconds/minutes/hours), fix bug that ignored incoming CC events, better sample-accurate processing of **OutParam** jumps and **Slowness** automation curves
+* v1.2: bug fix (final automation curve points of each block were one sample offset late)

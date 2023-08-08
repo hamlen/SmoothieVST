@@ -156,7 +156,7 @@ static void output_initial_point(IParameterChanges* out_changes, ParamID id, Par
 	for (int32 i = 0; i < numParamsChanged; ++i)
 	{
 		IParamValueQueue* q = out_changes->getParameterData(i);
-		if (q->getParameterId() == id)
+		if (q && q->getParameterId() == id)
 		{
 			int32 offset;
 			ParamValue val;
@@ -165,7 +165,9 @@ static void output_initial_point(IParameterChanges* out_changes, ParamID id, Par
 			return;
 		}
 	}
-	out_changes->addParameterData(id, dummy)->addPoint(0, y, dummy);
+	IParamValueQueue* q = out_changes->addParameterData(id, dummy);
+	if (q)
+		q->addPoint(0, y, dummy);
 }
 
 void Smoothie::addOutPoint(ProcessData& data, IParamValueQueue*& pqueue, int32 param_set, int32 firstSampleOffset, int32 finalSampleOffset, int8& prevCCval, double finalval)
@@ -175,7 +177,8 @@ void Smoothie::addOutPoint(ProcessData& data, IParamValueQueue*& pqueue, int32 p
 		int32 dummy;
 		if (!pqueue)
 			pqueue = data.outputParameterChanges->addParameterData(param_set * NumParamOffsets + OutParamOffset, dummy);
-		pqueue->addPoint(finalSampleOffset, finalval, dummy);
+		if (pqueue)
+			pqueue->addPoint(finalSampleOffset, finalval, dummy);
 	}
 	values[param_set].out = finalval;
 
@@ -201,7 +204,7 @@ void Smoothie::addOutPoint(ProcessData& data, IParamValueQueue*& pqueue, int32 p
 			const int32 yrange = (int32)finalCCval - (int32)firstCCval;
 			const double slope = (double)yrange / (double)xrange;
 
-			if (slope >= 0.5)
+			if (slope >= 0.5 || slope <= -0.5)
 			{
 				for (int32 i = 1; i <= xrange; ++i)
 				{
@@ -282,7 +285,7 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 		data.outputs[i].silenceFlags = (1ULL << data.outputs[i].numChannels) - 1;
 	}
 
-	if (data.numSamples <= 0 && (initial_points_sent || !data.outputParameterChanges))
+	if (data.numSamples <= 0)
 		return kResultTrue;
 
 	// Organize host-provided parameter change queues into arrays.
@@ -323,22 +326,22 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 	 * where h = secs_per_half_slowness (default=2)
 	 */
 	
-	for (int32 param_set = 0; param_set < num_smoothed_params; ++param_set)
+	for (ParamID param_set = 0; param_set < num_smoothed_params; ++param_set)
 	{
 		IParamValueQueue* const* const in_q = in_queue[param_set];
 		const ParamValue saved_original_outval = values[param_set].out;
 
 		// (in_x0,in_y0)--(in_x1,in_y1) is the last processed segment in InParam's automation curve,
 		// and in_index is the index of the next point in its curve.
-		int32 in_x0 = 0;
+		int32 in_x0 = -1;
 		ParamValue in_y0 = values[param_set].in;
-		int32 in_x1 = 0;
+		int32 in_x1 = -1;
 		ParamValue in_y1 = in_y0;
 		int32 in_index = 0;
 
 		// (slowness_x,slowness) is the last processed point in Slowness's automation curve,
 		// and slowness_index is the index of the next point in its curve.
-		int32 slowness_x = 0;
+		int32 slowness_x = -1;
 		ParamValue slowness = values[param_set].slowness;
 		int32 slowness_index = 0;
 
@@ -347,33 +350,31 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 
 		// Count the number points in each parameter's incoming automation curve.
 		int32 numPoints[NumParamOffsets] = {};
-		for (int32 i = 0; i < NumParamOffsets; ++i)
+		for (ParamID i = 0; i < NumParamOffsets; ++i)
 			if (in_q[i])
+			{
 				numPoints[i] = in_q[i]->getPointCount();
+				if (numPoints[i] < 0) numPoints[i] = 0; // should never happen (host served invalid point count)
+			}
 
 		// (out_x0,out_y0) = the last OutParam automation curve point that was output.
-		// (The point at offset 0 was implicitly output by the last call to process().)
+		// (The point at offset -1 was implicitly output by the last call to process().)
 		// Invariant: in_x0 <= out_x0
-		int32 out_x0 = 0;
+		int32 out_x0 = -1;
 		ParamValue out_y0 = values[param_set].out;
-		for (int32 out_index = 0; out_index <= numPoints[OutParamOffset]; ++out_index)
+		for (int32 out_index = 0; (uint32)out_index <= (uint32)numPoints[OutParamOffset]; ++out_index)
 		{
-			int32 out_x1 = data.numSamples;
+			int32 out_x1 = data.numSamples - 1;
 			ParamValue out_y1 = out_y0;
 			if (out_index < numPoints[OutParamOffset])
 			{
 				in_q[OutParamOffset]->getPoint(out_index, out_x1, out_y1);
+				if (out_x1 >= data.numSamples) out_x1 = data.numSamples - 1; // should never happen (host served invalid point queue)
 				CONSTRAIN(out_y1);
 			}
 			if (out_x1 <= out_x0)
 			{
-				// * out_x0 == out_x1 == 0 can happen when an explicit point overrides
-				//   an implicit point from the previous call to process().
-				// * Hosts shouldn't really send out_x0 == out_x1 != 0 because it's ambiguous,
-				//   but we treat it likewise to tolerate imprecise hosts.
-				// * out_x1 < out_x0 should never happen (getPoint API malfunction),
-				//   but we tolerate it here just in case.
-				addOutPoint(data, out_queue[param_set], param_set, out_x0, out_x0, lastCC, out_y1);
+				// should never happen (host served invalid point queue)
 				out_y0 = out_y1;
 				continue;
 			}
@@ -386,13 +387,14 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 				out_y0 = out_y1;
 				continue;
 			}
+			// Postcondition: in_x0 <= out_x0 < out_x1 < numSamples
 
 			// The received curve for OutParam didn't change (much) over interval (out_x0, out_x1].
 			// Merge all consecutive segments that don't change it (much) until we reach a segment
 			// that does change it, or we reach the end of the sample buffer.
-			while (out_x1 < data.numSamples)
+			while (out_index < numPoints[OutParamOffset])
 			{
-				int32 out_x2 = data.numSamples;
+				int32 out_x2 = data.numSamples - 1;
 				ParamValue out_y2 = out_y1;
 				if (out_index + 1 < numPoints[OutParamOffset])
 					in_q[OutParamOffset]->getPoint(out_index + 1, out_x2, out_y2);
@@ -400,19 +402,20 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 				if (!roughly_equal(out_y1, out_y2))
 					break;
 				++out_index;
-				if (out_x1 < out_x2) out_x1 = out_x2; // should always happen
+				if (out_x2 >= data.numSamples) out_x2 = data.numSamples - 1; // should never happen (host served invalid point queue)
+				if (out_x1 < out_x2) out_x1 = out_x2; // should always happen (otherwise host served invalid point queue)
 				out_y1 = out_y2;
 			}
+			// Postcondition: in_x0 <= out_x0 < out_x1 < numSamples
 
 			// OutParam is unchanging over interval (out_x0, out_x1], and out_x1 is either the
-			// start of a host-overridden segment or the end of the sample buffer (numSamples).
+			// start of a host-overridden segment or the end of the sample buffer (numSamples - 1).
 			// Proceed to smoothly migrate OutParam toward InParam over interval (out_x0, out_x1]...
 
 			while (out_x0 < out_x1)
 			{
 				// Find the first segment of InParam's automation curve that ends strictly after out_x0
-				// Invariant: out_x0 < out_x1 <= numSamples
-				// Invariant: in_x0 <= out_x0
+				// Invariant: in_x0 <= out_x0 < out_x1 < numSamples
 				while (in_x1 <= out_x0)
 				{
 					in_x0 = in_x1;
@@ -420,41 +423,45 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 					if (in_index < numPoints[InParamOffset])
 					{
 						in_q[InParamOffset]->getPoint(in_index, in_x1, in_y1);
-						if (in_x1 < in_x0) in_x1 = in_x0; // should never happen
+						if (in_x1 < in_x0) in_x1 = in_x0; // should never happen (host served invalid point queue)
+						else if (in_x1 >= data.numSamples) in_x1 = data.numSamples - 1; // should never happen (host served invalid point queue)
 						++in_index;
 						CONSTRAIN(in_y1);
 					}
 					else
 					{
-						in_x1 = data.numSamples;
+						in_x1 = data.numSamples - 1;
 						break;
 					}
 				}
-				// Postcondition: in_x0 <= out_x0 < in_x1
+				// Postcondition: in_x0 <= out_x0 < in_x1 < numSamples
+				// Postcondition: in_x0 <= out_x0 < out_x1 < numSamples
 
 				// Find the first point of Slowness's automation curve that is strictly after out_x0
-				// Invariant: out_x0 < out_x1 <= numSamples
 				while (slowness_x <= out_x0)
 				{
 					if (slowness_index < numPoints[SlownessOffset])
 					{
 						in_q[SlownessOffset]->getPoint(slowness_index, slowness_x, slowness);
 						++slowness_index;
+						if (slowness_x >= data.numSamples) slowness_x = data.numSamples - 1; // should never happen (host served invalid point queue)
 						CONSTRAIN(slowness);
 					}
 					else
 					{
-						slowness_x = data.numSamples;
+						slowness_x = data.numSamples - 1;
 						break;
 					}
 				}
-				// Postcondition: out_x0 < slowness_x
+				// Postcondition: out_x0 < slowness_x < numSamples
+				// Postcondition: in_x0 <= out_x0 < in_x1 < numSamples
+				// Postcondition: in_x0 <= out_x0 < out_x1 < numSamples
 
 				// Let x be the first sample offset within (out_x0,out_x1] where InParam or Slowness changes
 				// (or let x = out_x1 if neither changes anywhere within that interval).
 				int32 x = (in_x1 <= slowness_x) ? in_x1 : slowness_x;
 				if (x > out_x1) x = out_x1;
-				// Postcondition: out_x0 < x <= out_x1
+				// Postcondition: out_x0 < x <= out_x1 < numSamples
 
 				// Prepare to output a new OutParam automation curve point at x...
 				// Note:  in_x1 - in_x0 > 0 because in_x0 <= out_x0 < in_x1
@@ -515,7 +522,7 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 
 				// Output the computed automation curve point for OutParam (but omit it if it's at the
 				// end of a flat segment of the curve at the end of the buffer, as per the VST3 standard).
-				if (!(x >= data.numSamples && roughly_equal(out_y0, y)))
+				if (!(x >= data.numSamples - 1 && roughly_equal(out_y0, y)))
 					addOutPoint(data, out_queue[param_set], param_set, out_x0, x, lastCC, y);
 
 				// Shift out_x0 forward to the most recently outputted point, and continue until the

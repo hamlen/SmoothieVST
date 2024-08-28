@@ -269,28 +269,23 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 	}
 
 	// We shouldn't be asked for any audio, but process it anyway (emit silence) to tolerate uncompliant hosts.
-	for (int32 i = 0; i < data.numOutputs; ++i)
+	const bool is32bit = (data.symbolicSampleSize == kSample32);
+	const size_t buffersize = data.numSamples * ((data.symbolicSampleSize == kSample32) ? sizeof(Sample32) : sizeof(Sample64));
+	if ((is32bit || (data.symbolicSampleSize == kSample64)) && (buffersize > 0))
 	{
-		for (int32 j = 0; j < data.outputs[i].numChannels; ++j)
+		for (int32 i = 0; i < data.numOutputs; ++i)
 		{
-			bool is32bit = (data.symbolicSampleSize == kSample32);
-			if (is32bit || (data.symbolicSampleSize == kSample64))
+			for (int32 j = 0; j < data.outputs[i].numChannels; ++j)
 			{
-				void* channelbuffer = is32bit ? (void*)data.outputs[i].channelBuffers32[j] : (void*)data.outputs[i].channelBuffers64[j];
-				size_t datasize = is32bit ? sizeof(*data.outputs[i].channelBuffers32[j]) : sizeof(*data.outputs[i].channelBuffers64[j]);
-				if (channelbuffer)
-					memset(channelbuffer, 0, data.numSamples * datasize);
+				if (void* channelbuffer = is32bit ? (void*)data.outputs[i].channelBuffers32[j] : (void*)data.outputs[i].channelBuffers64[j])
+					memset(channelbuffer, 0, buffersize);
 			}
+			data.outputs[i].silenceFlags = (1ULL << data.outputs[i].numChannels) - 1ULL;
 		}
-		data.outputs[i].silenceFlags = (1ULL << data.outputs[i].numChannels) - 1;
 	}
 
-	if (data.numSamples <= 0)
-		return kResultTrue;
-
-	// Organize host-provided parameter change queues into arrays.
+	// Organize host-provided incoming parameter change queues into arrays.
 	IParamValueQueue* in_queue[num_smoothed_params][NumParamOffsets] = {};
-	IParamValueQueue* out_queue[num_smoothed_params] = {};
 	if (data.inputParameterChanges)
 	{
 		int32 numParamsChanged = data.inputParameterChanges->getParameterCount();
@@ -302,6 +297,27 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 				in_queue[id / NumParamOffsets][id % NumParamOffsets] = q;
 		}
 	}
+
+	// If the host wants to flush parameters without processing, do so and exit.
+	if (data.numSamples <= 0)
+	{
+		for (ParamID i = 0; i < num_smoothed_params; ++i)
+			for (ParamID j = 0; j < NumParamOffsets; ++j)
+				if (IParamValueQueue* q = in_queue[i][j])
+				{
+					const int32 n = q->getPointCount();
+					if (n > 0)
+					{
+						ParamValue* y = (j == InParamOffset) ? &values[i].in : (j == OutParamOffset) ? &values[i].out : &values[i].slowness;
+						int32 dummy;
+						q->getPoint(n - 1, dummy, *y);
+					}
+				}
+		return kResultOk;
+	}
+
+	// Organize host-provided outgoing parameter change queues into arrays.
+	IParamValueQueue* out_queue[num_smoothed_params] = {};
 	if (data.outputParameterChanges)
 	{
 		int32 numParamsChanged = data.outputParameterChanges->getParameterCount();
@@ -325,7 +341,7 @@ tresult PLUGIN_API Smoothie::process(ProcessData& data)
 	 *   slowness = n / (n + h)
 	 * where h = secs_per_half_slowness (default=2)
 	 */
-	
+
 	for (ParamID param_set = 0; param_set < num_smoothed_params; ++param_set)
 	{
 		IParamValueQueue* const* const in_q = in_queue[param_set];

@@ -97,12 +97,14 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\..\vst3sdk;..\..\vst3sdk\base\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <IgnoreSpecificDefaultLibraries>msvcrtd.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -114,13 +116,15 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\..\vst3sdk;..\..\vst3sdk\base\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64 /EXPORT:GetPluginFactory</AdditionalOptions>
-      <IgnoreSpecificDefaultLibraries>msvcrtd.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -190,16 +194,16 @@
     <None Include="Smoothie.def" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\vstbuild32\pluginterfaces\pluginterfaces.vcxproj">
+    <ProjectReference Include="..\..\vstbuild32\pluginterfaces.vcxproj">
       <Project>{2f2a1355-d7a6-32da-bf8f-0751d852e2c9}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\vstbuild32\public.sdk\sdk.vcxproj">
+    <ProjectReference Include="..\..\vstbuild32\sdk.vcxproj">
       <Project>{0acddd5b-36e7-3c58-93f8-194891fafae7}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\vstbuild\pluginterfaces\pluginterfaces.vcxproj">
+    <ProjectReference Include="..\..\vstbuild\pluginterfaces.vcxproj">
       <Project>{15e18901-0ab8-3018-8b8c-70104ea9e077}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\vstbuild\public.sdk\sdk.vcxproj">
+    <ProjectReference Include="..\..\vstbuild\sdk.vcxproj">
       <Project>{f095d436-a0dd-3462-a025-4d2d28ff7c16}</Project>
     </ProjectReference>
   </ItemGroup>
